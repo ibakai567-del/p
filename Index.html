@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  />
+
+  <title>Hiro Marker AR Character</title>
+
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+  <!-- AR.js -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, "Noto Sans Thai", sans-serif;
+      background: #000;
+    }
+
+    /* แถบชื่อด้านบน */
+    #title {
+      position: fixed;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+
+      color: white;
+      background: rgba(0, 0, 0, 0.65);
+      padding: 10px 18px;
+      border-radius: 30px;
+
+      font-size: 16px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    /* ปุ่มควบคุม */
+    #controls {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 20px;
+
+      z-index: 9999;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+
+      padding: 0 12px;
+    }
+
+    .control-btn {
+      border: none;
+      outline: none;
+
+      min-width: 100px;
+      min-height: 55px;
+
+      padding: 10px 14px;
+
+      border-radius: 18px;
+
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+
+      background: linear-gradient(135deg, #7b2cff, #d51cff);
+
+      box-shadow:
+        0 6px 18px rgba(0, 0, 0, 0.35),
+        inset 0 1px rgba(255, 255, 255, 0.3);
+
+      cursor: pointer;
+
+      transition:
+        transform 0.1s,
+        filter 0.1s;
+    }
+
+    .control-btn:active {
+      transform: scale(0.92);
+      filter: brightness(1.25);
+    }
+
+    #danceBtn {
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    }
+
+    #squatBtn {
+      background: linear-gradient(135deg, #11998e, #38ef7d);
+    }
+
+    #tongueBtn {
+      background: linear-gradient(135deg, #4776e6, #8e54e9);
+    }
+
+    #status {
+      position: fixed;
+      left: 50%;
+      bottom: 90px;
+
+      transform: translateX(-50%);
+
+      z-index: 9999;
+
+      color: white;
+      background: rgba(0, 0, 0, 0.55);
+
+      padding: 8px 14px;
+      border-radius: 20px;
+
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 500px) {
+      #controls {
+        gap: 7px;
+      }
+
+      .control-btn {
+        min-width: 0;
+        flex: 1;
+
+        padding: 9px 5px;
+
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="title">
+    🤖 Hiro AR Character
+  </div>
+
+  <div id="status">
+    📷 ส่องไปที่ Hiro Marker
+  </div>
+
+  <div id="controls">
+
+    <button
+      id="danceBtn"
+      class="control-btn"
+      onclick="dance()"
+    >
+      💃 เต้นโยกเอว
+    </button>
+
+    <button
+      id="squatBtn"
+      class="control-btn"
+      onclick="squat()"
+    >
+      🧎 นั่งยอง
+    </button>
+
+    <button
+      id="tongueBtn"
+      class="control-btn"
+      onclick="tongue()"
+    >
+      😛 แลบลิ้น
+    </button>
+
+  </div>
+
+
+  <!-- AR Scene -->
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+
+    renderer="
+      antialias: true;
+      alpha: true;
+      colorManagement: true;
+    "
+
+    arjs="
+      sourceType: webcam;
+      trackingMethod: best;
+      detectionMode: mono_and_matrix;
+      matrixCodeType: 3x3;
+    "
+  >
+
+    <!-- แสง -->
+    <a-entity light="type: ambient; intensity: 1.8"></a-entity>
+
+    <a-entity
+      light="type: directional; intensity: 2"
+      position="2 4 3"
+    ></a-entity>
+
+
+    <!-- Hiro Marker -->
+    <a-marker
+      id="hiroMarker"
+      preset="hiro"
+      emitevents="true"
+      smooth="true"
+      smoothCount="10"
+      smoothTolerance="0.01"
+      smoothThreshold="5"
+    >
+
+      <!-- กลุ่มตัวละคร -->
+      <a-entity
+        id="character"
+        position="0 0 0"
+        scale="0.8 0.8 0.8"
+      >
+
+        <!--
+          โมเดล GLB ตัวอย่าง
+
+          เปลี่ยน URL ตรงนี้เป็นโมเดลของคุณเองได้
+        -->
+        <a-entity
+          id="characterModel"
+          gltf-model="https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Fox/glTF-Binary/Fox.glb"
+          position="0 0 0"
+          rotation="0 180 0"
+          scale="0.025 0.025 0.025"
+          animation-mixer
+        >
+        </a-entity>
+
+      </a-entity>
+
+    </a-marker>
+
+
+    <!-- Camera -->
+    <a-entity camera></a-entity>
+
+  </a-scene>
+
+
+  <script>
+
+    const character = document.getElementById("character");
+    const model = document.getElementById("characterModel");
+
+    const statusText = document.getElementById("status");
+
+    let isDetected = false;
+
+
+    // =====================================================
+    // ตรวจพบ Hiro Marker
+    // =====================================================
+
+    const marker = document.getElementById("hiroMarker");
+
+    marker.addEventListener("markerFound", function () {
+
+      isDetected = true;
+
+      statusText.innerHTML =
+        "✅ พบ Hiro แล้ว! กดปุ่มเพื่อสั่งตัวการ์ตูน";
+
+    });
+
+
+    // =====================================================
+    // Marker หาย
+    // =====================================================
+
+    marker.addEventListener("markerLost", function () {
+
+      isDetected = false;
+
+      statusText.innerHTML =
+        "📷 ส่องไปที่ Hiro Marker";
+
+    });
+
+
+    // =====================================================
+    // หยุด Animation ทั้งหมด
+    // =====================================================
+
+    function stopAnimation() {
+
+      // ลบ animation ที่สร้างจาก JavaScript
+
+      character.removeAttribute("animation__dance");
+      character.removeAttribute("animation__squat");
+      character.removeAttribute("animation__tongue");
+
+      character.removeAttribute("animation__bounce");
+
+    }
+
+
+    // =====================================================
+    // 💃 เต้นโยกเอว
+    // =====================================================
+
+    function dance() {
+
+      if (!isDetected) {
+        statusText.innerHTML =
+          "⚠️ กรุณาส่องกล้องไปที่ Hiro Marker ก่อน";
+        return;
+      }
+
+      stopAnimation();
+
+      statusText.innerHTML =
+        "💃 กำลังเต้นโยกเอว!";
+
+      // โยกซ้าย-ขวา
+
+      character.setAttribute(
+        "animation__dance",
+        {
+          property: "rotation",
+          from: "0 -15 -12",
+          to: "0 15 12",
+
+          dur: 350,
+
+          dir: "alternate",
+
+          loop: 8,
+
+          easing: "easeInOutSine"
+        }
+      );
+
+      // เด้งขึ้นลงเล็กน้อย
+
+      character.setAttribute(
+        "animation__bounce",
+        {
+          property: "position",
+
+          from: "0 0 0",
+          to: "0 0.08 0",
+
+          dur: 175,
+
+          dir: "alternate",
+
+          loop: 16,
+
+          easing: "easeInOutSine"
+        }
+      );
+    }
+
+
+    // =====================================================
+    // 🧎 นั่งยอง
+    // =====================================================
+
+    function squat() {
+
+      if (!isDetected) {
+        statusText.innerHTML =
+          "⚠️ กรุณาส่องกล้องไปที่ Hiro Marker ก่อน";
+        return;
+      }
+
+      stopAnimation();
+
+      statusText.innerHTML =
+        "🧎 นั่งยอง!";
+
+      character.setAttribute(
+        "animation__squat",
+        {
+          property: "scale",
+
+          from: "0.8 0.8 0.8",
+          to: "0.8 0.48 0.8",
+
+          dur: 500,
+
+          dir: "alternate",
+
+          loop: 2,
+
+          easing: "easeInOutQuad"
+        }
+      );
+    }
+
+
+    // =====================================================
+    // 😛 แลบลิ้น
+    // =====================================================
+
+    function tongue() {
+
+      if (!isDetected) {
+        statusText.innerHTML =
+          "⚠️ กรุณาส่องกล้องไปที่ Hiro Marker ก่อน";
+        return;
+      }
+
+      statusText.innerHTML =
+        "😛 แลบลิ้น!";
+
+      /*
+        หมายเหตุ:
+
+        การขยับ "ลิ้น" โดยตรงจำเป็นต้องมี
+        morph target / bone / animation
+        สำหรับลิ้นอยู่ในโมเดล GLB
+
+        โค้ดนี้จะทำ effect เด้ง/ขยับตัว
+        เพื่อให้สามารถทดสอบปุ่มได้ทันที
+      */
+
+      stopAnimation();
+
+      character.setAttribute(
+        "animation__tongue",
+        {
+          property: "rotation",
+
+          from: "0 0 0",
+          to: "0 0 8",
+
+          dur: 180,
+
+          dir: "alternate",
+
+          loop: 6,
+
+          easing: "easeInOutSine"
+        }
+      );
+
+      character.setAttribute(
+        "animation__bounce",
+        {
+          property: "position",
+
+          from: "0 0 0",
+          to: "0 0.04 0",
+
+          dur: 180,
+
+          dir: "alternate",
+
+          loop: 6
+        }
+      );
+    }
+
+
+    // =====================================================
+    // แตะหน้าจอเพื่อ reset
+    // =====================================================
+
+    document.addEventListener("dblclick", function () {
+
+      stopAnimation();
+
+      character.setAttribute(
+        "rotation",
+        "0 0 0"
+      );
+
+      character.setAttribute(
+        "position",
+        "0 0 0"
+      );
+
+      character.setAttribute(
+        "scale",
+        "0.8 0.8 0.8"
+      );
+
+      statusText.innerHTML =
+        isDetected
+          ? "✅ พร้อมใช้งาน"
+          : "📷 ส่องไปที่ Hiro Marker";
+
+    });
+
+
+  </script>
+
+</body>
+</html>
